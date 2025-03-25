@@ -1,4 +1,4 @@
-# 📊 Funding Progress App
+# 📊 Progress Battle App
 
 Um aplicativo de interface de usuário baseado em **Textual** que simula uma competição de barras de progresso.
 
