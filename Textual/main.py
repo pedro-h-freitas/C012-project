@@ -5,7 +5,7 @@ from threading import Thread
 from time import sleep
 from textual.color import Gradient
 
-class FundingProgressApp(App[None]):
+class ProgressBattleApp(App[None]):
     """
     Aplicação baseada no Textual para simular uma competição de barras de progresso.
     Cada barra representa um competidor e seu progresso é atualizado dinamicamente.
@@ -106,4 +106,4 @@ class FundingProgressApp(App[None]):
             bar.advance(amount)  # Atualiza o progresso
 
 if __name__ == "__main__":
-    FundingProgressApp().run()
+    ProgressBattleApp().run()
