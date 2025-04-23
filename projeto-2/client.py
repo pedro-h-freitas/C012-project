@@ -23,3 +23,16 @@ class Client:
             "ADULTO":4
         }
         return priority[category]
+    
+clients = {
+    "client_1": {"category": "PCD",      "action": "CONTA",        "amount": 428},
+    "client_2": {"category": "ADULTO",   "action": "DEPOSITO",     "amount": 915},
+    "client_3": {"category": "IDOSO",    "action": "SAQUE",        "amount": 157},
+    "client_4": {"category": "GRAVIDA",  "action": "2° VIA",       "amount": 602},
+    "client_5": {"category": "ADULTO",   "action": "TIGRINHO",     "amount": 329},
+    "client_6": {"category": "PCD",      "action": "APOSENTADORIA","amount": 774},
+    "client_7": {"category": "IDOSO",    "action": "DEPOSITO",     "amount": 241},
+    "client_8": {"category": "GRAVIDA",  "action": "SAQUE",        "amount":  88},
+    "client_9": {"category": "ADULTO",   "action": "CONTA",        "amount": 503},
+    "client_10":{"category": "PCD",      "action": "TIGRINHO",     "amount": 640},
+}
