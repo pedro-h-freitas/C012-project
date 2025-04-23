@@ -1,0 +1,140 @@
+Equipe: 1
+Pontos positivos
+  - boa implementação e boa logica
+  - código bem arquitetado
+ 
+Pontos Negativos:
+  - tempo de comer e de pedidios são fixos
+  - baixa visiblidade da aplicação
+
+Equipe: 2
+Pontos positivos
+  - bom uso de eventos
+
+Pontos Negativos:
+  - Apresentação demorada
+
+Equipe: 3
+Pontos positivos
+  - Parametrizado
+ 
+Pontos Negativos:
+  - Output sequencial, não demonstrando aleatoriedade das threads
+
+Equipe: 4
+Pontos positivos
+  - Cóigo bem estruturado
+
+Pontos Negativos:
+  - Explicação confusa de lock vc sem lock
+
+Equipe: 5
+Pontos positivos
+  - Muito boa a ideia, mostrar as informções das threads!
+ 
+Pontos Negativos:
+  - Interface confusa
+
+Equipe: 6
+Pontos positivos
+  - Quantidade de equipes parametrizadas, facil de ampliar ou diminuir
+  
+Pontos Negativos:
+  - Tempo de realização de tarefa fixo
+
+Equipe: 7
+Pontos positivos
+  - Tratamento de erro
+
+Pontos Negativos:
+  - classe Carro truncada para um Semaforo, não é simples a inserção de novos semáforos
+
+Equipe: 8
+Pontos positivos
+  - Simples e bem implementado
+ 
+Pontos Negativos:
+  - Executar java em google collab
+
+Equipe: 9
+Pontos positivos
+  - Boa ideia, boa implementação
+  - Bem documentado
+  
+Pontos Negativos:
+  - Apresentação repetitiva, explicaram a mesma coisa mais de uma vez
+  - Faltou logica para o fechamento do restaurante
+  - thread garçom e anotar separadas, anotar poderia ser uma função do garçom
+
+Equipe: 10
+Pontos positivos
+  - bons slides
+  - boa apresentação de codigo
+ 
+Pontos Negativos:
+  - 3 rolos não estao simultaneos
+
+Equipe: 11
+Pontos positivos
+  - Interface bem feita
+
+Pontos Negativos:
+  - numero de threads travado, não escalavel
+
+Equipe: 12
+Pontos positivos
+  - Bem claro a vantagem ao se usar thread
+ 
+Pontos Negativos:
+  - Parametrização incompleta, sendo necessário alterar uma constante e um for (for poderia usar um range com base na constante)
+
+Equipe: 13
+Pontos positivos
+  - Classes muito bem montadas
+  - bom uso de list comprehension
+
+Pontos Negativos:
+  - Interface grafica e logica não sincronizada (primeiro no terminal e depois na tela)
+
+Equipe: 14
+Pontos positivos
+  - escalavel a partir de um dicionario
+ 
+Pontos Negativos:
+  - código pode crashar dependendo das ações
+
+Equipe: 16
+Pontos positivos
+  - Numero de clientes e contas parametrizados
+
+Pontos Negativos:
+  - logs poluidos
+
+Equipe: 17
+Pontos positivos
+  - Boa documentação (README)
+ 
+Pontos Negativos:
+  - Comentários em excesso
+
+Equipe: 18
+Pontos positivos
+  - Aplicação real e funcional de threads
+ 
+Pontos Negativos:
+  - Falta de logs, pouco visual quando a aplicação está rodando
+
+Equipe: 19
+Pontos positivos
+  - Boa implementação de campeonato
+  
+Pontos Negativos:
+  - UI confusa
+
+Equipe: 20
+Pontos positivos
+  - boa implementação de forca bruta, com flag para interromper as outras threads
+ 
+Pontos Negativos:
+  - falaram e riram na apresentação das outras equipes
+  - Codigo mal explicado
