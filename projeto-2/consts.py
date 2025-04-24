@@ -1,0 +1,8 @@
+GREEN = 1
+BLUE = 2
+CYAN = 3
+MAGENTA = 4
+PAIRS = 5
+RED = 6
+WHITE = 7
+YELLOW = 8

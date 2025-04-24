@@ -1,60 +1,94 @@
+from math import floor, ceil
 import curses
 import time
-from math import floor, ceil
 
-GREEN_BLACK = 1
-BLUE_BLACK = 2
-
-BLACK_GREEN = 3
-BLACK_BLUE = 4
+from lottery_booth import LotteryBooth
+from client import Client
+from consts import *
 
 
 class LotteryApp():
     def __init__(self):
-        self.stdscr: curses.window
+        self.stdsrc: curses.window
 
         self.height: int
         self.width: int
 
         self._vault = 100
 
-    def draw_queue(self):
-        pass
+        self.booths = [
+            LotteryBooth('Caixa 1', BLUE),
+            LotteryBooth('Caixa 2', CYAN),
+            LotteryBooth('Caixa 3', MAGENTA),
+            LotteryBooth('Caixa 4', YELLOW),
+            LotteryBooth('Caixa 5', RED)
+        ]
 
-    def write_str_center(self, y, str):
+        self.clients = [
+            Client('Client 1', BLUE),
+            Client('Client 2', CYAN),
+            Client('Client 3', MAGENTA),
+            Client('Client 4', YELLOW),
+            Client('Client 5', RED)
+        ]
+
+        self.booths_space = len(self.booths) * 5 + (len(self.booths) - 1) * 4
+
+    def _write_str_center(self, y, str):
         x = floor(self.width / 2) - ceil(len(str) / 2)
 
-        self.stdscr.addstr(y, x, str)
+        self.stdsrc.addstr(y, x, str)
 
     def draw_lottery(self):
-        self.stdscr.attron(curses.color_pair(GREEN_BLACK))
-        self.write_str_center(0, '─'*10 + ' LOTERICA ' + '─'*10)
-        self.stdscr.attroff(curses.color_pair(GREEN_BLACK))
+        loterica_str = '─'*10 + ' LOTERICA ' + '─'*10
+        cofre_str = '─'*ceil((self.booths_space) / 2) + \
+            ' COFRE '+'─'*floor((self.booths_space) / 2)
 
-        self.write_str_center(2, '─'*5 + ' COFRE ' + '─'*5)
-        self.write_str_center(3, str(self._vault))
-        self.write_str_center(4, '─'*17)
+        self.stdsrc.attron(curses.color_pair(GREEN))
+        self._write_str_center(0, loterica_str)
+        self.stdsrc.attroff(curses.color_pair(GREEN))
+
+        self._write_str_center(2, cofre_str)
+        self._write_str_center(3, str(self._vault))
+        self._write_str_center(4, '─'*(self.booths_space + 7))
 
     def draw_lottery_booths(self):
-        pass
+        y = 8
+        x = floor(self.width / 2) - ceil(self.booths_space / 2)
 
-    def run(self, stdscr: curses.window):
+        for booth in self.booths:
+            booth.draw(self.stdsrc, y, x)
+            x += 9
+
+    def draw_queue(self):
+        x = floor(self.width / 2) - ceil(self.booths_space / 2)
+
+        for client in self.clients:
+            client.draw(self.stdsrc, 16, x)
+            x += 3
+
+    def run(self, stdsrc: curses.window):
         curses.start_color()
-        curses.init_pair(GREEN_BLACK, curses.COLOR_GREEN, curses.COLOR_BLACK)
-        curses.init_pair(BLACK_GREEN, curses.COLOR_BLACK, curses.COLOR_GREEN)
-        curses.init_pair(BLUE_BLACK, curses.COLOR_BLUE, curses.COLOR_BLACK)
-        curses.init_pair(BLACK_BLUE, curses.COLOR_BLACK, curses.COLOR_BLUE)
+        curses.init_pair(GREEN, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(BLUE, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(CYAN, curses.COLOR_CYAN, curses.COLOR_BLACK)
+        curses.init_pair(MAGENTA, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        curses.init_pair(PAIRS, curses.COLOR_PAIRS, curses.COLOR_BLACK)
+        curses.init_pair(RED, curses.COLOR_RED, curses.COLOR_BLACK)
+        curses.init_pair(WHITE, curses.COLOR_WHITE, curses.COLOR_BLACK)
+        curses.init_pair(YELLOW, curses.COLOR_YELLOW, curses.COLOR_BLACK)
 
-        self.stdscr = stdscr
-        self.height, self.width = stdscr.getmaxyx()
+        self.stdsrc = stdsrc
+        self.height, self.width = stdsrc.getmaxyx()
 
         while True:
-            stdscr.clear()
+            stdsrc.clear()
 
             self.draw_lottery()
             self.draw_lottery_booths()
+            self.draw_queue()
 
-            stdscr.refresh()
+            stdsrc.refresh()
             time.sleep(0.2)  # Reduzindo o tempo de espera
 
 
