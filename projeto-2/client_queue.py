@@ -26,13 +26,13 @@ class ClientQueue:
 
 
 if __name__ == "__main__":
-    clients = [Client("IDOSO", 1000, "SAQUE"),
-               Client("PCD", 1000, "TIGRINHO"),
-               Client("GRAVIDA", 1000, "APOSENTADORIA")]
+    clients = [Client("IDOSO", 1000, "SAQUE", 4),
+               Client("PCD", 1000, "MEGA-SENA", 4),
+               Client("GRAVIDA", 1000, "APOSENTADORIA", 6)]
 
-    queue = ClientQueue(clients, 'SJF')
+    queue = ClientQueue('SJF', clients)
 
-    for client in queue.add_client(Client("ADULTO", 1000, "2° VIA")):
+    for client in queue.add_client(Client("ADULTO", 1000, "2° VIA", 1)):
         print(client)
     print('-----------')
 
@@ -41,9 +41,9 @@ if __name__ == "__main__":
     for client in queue.get_clients():
         print(client)
     print('-----------')
-    for client in queue.add_client(Client("ADULTO", 1000, "CONTA")):
+    for client in queue.add_client(Client("ADULTO", 1000, "CONTA", 1)):
         print(client)
     print('-----------')
-    for client in queue.add_client(Client("ADULTO", 1000, "DEPOSITO")):
+    for client in queue.add_client(Client("ADULTO", 1000, "DEPOSITO", 1)):
         print(client)
     print('-----------')
