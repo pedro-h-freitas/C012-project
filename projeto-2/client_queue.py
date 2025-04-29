@@ -14,7 +14,8 @@ class ClientQueue:
             self.clients = sorted(self.clients, key=lambda c: c.priority)
 
     def get_next(self):
-        return self.clients.pop(0)
+        if self.clients:
+            return self.clients.pop(0)
 
     def get_clients(self) -> list[Client]:
         return self.clients.copy()
@@ -26,24 +27,31 @@ class ClientQueue:
 
 
 if __name__ == "__main__":
-    clients = [Client("IDOSO", 1000, "SAQUE", 4),
-               Client("PCD", 1000, "MEGA-SENA", 4),
-               Client("GRAVIDA", 1000, "APOSENTADORIA", 6)]
+    queue = ClientQueue('PS')
 
-    queue = ClientQueue('SJF', clients)
+    print('-----------')
+    print(f'Fila vazia: {queue.get_next()}\n\n')
 
+    print(f'Adicionando Clientes na fila')
     for client in queue.add_client(Client("ADULTO", 1000, "2° VIA", 1)):
         print(client)
-    print('-----------')
+    print('-----------\n\n-----------')
 
+    print(f'Pegando o Próximo da fila')
     print(queue.get_next())
-    print('-----------')
+    print('-----------\n\n-----------')
+
+    print(f'Listando clientes na fila')
     for client in queue.get_clients():
         print(client)
-    print('-----------')
+    print('-----------\n\n-----------')
+
+    print(f'Adicionando Clientes na fila')
     for client in queue.add_client(Client("ADULTO", 1000, "CONTA", 1)):
         print(client)
-    print('-----------')
+    print('-----------\n\n-----------')
+
+    print(f'Adicionando Clientes na fila')
     for client in queue.add_client(Client("ADULTO", 1000, "DEPOSITO", 1)):
         print(client)
     print('-----------')
