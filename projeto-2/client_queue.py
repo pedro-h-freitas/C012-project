@@ -11,7 +11,7 @@ class ClientQueue:
         if self.scheduling == 'SJF':
             self.clients = sorted(self.clients, key=lambda c: c.get_time())
         elif self.scheduling == 'PS':
-            self.clients = sorted(self.clients, key=lambda c: c.get_priority())
+            self.clients = sorted(self.clients, key=lambda c: c.priority)
 
     def get_next(self):
         return self.clients.pop(0)

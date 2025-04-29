@@ -8,10 +8,20 @@ class Client:
         self.amount = amount
         self.color = self.__get_color(category)
         self.char = self.__get_char(action)
+        self.priority = self.__get_priority(category)
         self.arrive_time = arrive_time
 
     def __str__(self):
-        return '({}){:<10}({}){:<15} {}'.format(self.color, self.category,self.char, self.action, self.amount)
+        return '({}){:<10}({}){:<15} {}'.format(self.priority, self.category, self.char, self.action, self.amount)
+
+    def __get_priority(self, category):
+        priority = {
+            "IDOSO": 1,
+            "PCD": 2,
+            "GRAVIDA": 3,
+            "ADULTO": 4
+        }
+        return priority[category]
 
     def __get_color(self, category: str):
         category_color = {
@@ -33,11 +43,6 @@ class Client:
         }
         return action_char[action]
 
-    def draw(self, stdsrc: curses.window, y: int, x: int):
-        stdsrc.attron(curses.color_pair(self.color))
-        stdsrc.addch(y, x, self.char, curses.A_REVERSE)
-        stdsrc.attroff(curses.color_pair(self.color))
-
     def get_time(self):
         time = {
             "SAQUE": 1,
@@ -49,11 +54,7 @@ class Client:
         }
         return time[self.action]
 
-    def get_priority(self):
-        priority = {
-            "IDOSO": 1,
-            "PCD": 2,
-            "GRAVIDA": 3,
-            "ADULTO": 4
-        }
-        return priority[self.category]
+    def draw(self, stdsrc: curses.window, y: int, x: int):
+        stdsrc.attron(curses.color_pair(self.color))
+        stdsrc.addch(y, x, self.char, curses.A_REVERSE)
+        stdsrc.attroff(curses.color_pair(self.color))
