@@ -11,7 +11,7 @@ class Client:
         self.arrive_time = arrive_time
 
     def __str__(self):
-        return f'{self.category}({self.color})\t{self.action}({self.char})\t{self.amount}'
+        return '({}){:<10}({}){:<15} {}'.format(self.color, self.category,self.char, self.action, self.amount)
 
     def __get_color(self, category: str):
         category_color = {
