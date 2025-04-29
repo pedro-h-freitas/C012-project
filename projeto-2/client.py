@@ -1,16 +1,29 @@
 import curses
+from consts import *
 
 
 class Client:
-    def __init__(self, category: str, amount: int, action: str, color: int):
+    def __init__(self, category: str, amount: int, action: str, arrive_time: int):
         self.category = category
         self.action = action
         self.amount = amount
-        self.color = color
+        self.color = RED
+        self.char = 'R'
+
+        # self.color = self.__get_color(category)
+        # self.char = self.__get_char(action)
+
+        self.arrive_time = arrive_time
+
+    def __get_color(self, category: str):
+        raise NotImplementedError()
+
+    def __get_char(self, action: str):
+        raise NotImplementedError()
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
-        stdsrc.addch(y, x, " ", curses.A_REVERSE)
+        stdsrc.addch(y, x, self.char, curses.A_REVERSE)
         stdsrc.attroff(curses.color_pair(self.color))
 
     def __str__(self):
