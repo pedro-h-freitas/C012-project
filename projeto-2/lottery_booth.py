@@ -2,14 +2,16 @@ import threading
 import time
 import random
 import client as c_module
+from client import Client
 import curses
 
 
 class LotteryBooth:
-    def __init__(self, booth_id, color):
+    def __init__(self, booth_id, color, client=None):
         self.id = booth_id
         self.semaphore = threading.Semaphore(1)
         self.color = color
+        self.client: Client | None = client
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
@@ -20,6 +22,9 @@ class LotteryBooth:
         stdsrc.attroff(curses.color_pair(self.color))
 
         stdsrc.addstr(y+1, x+2,   " ", curses.A_REVERSE)
+
+        if self.client:
+            self.client.draw(stdsrc, y+3, x+2)
 
     def serve(self, category, amount, job_time):
         print(f"ENTRADA - CABINE {self.id} - {category} - {amount} reais")

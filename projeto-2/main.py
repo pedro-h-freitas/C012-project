@@ -17,19 +17,19 @@ class LotteryApp():
         self._vault = 100
 
         self.booths = [
-            LotteryBooth('Caixa 1', BLUE),
-            LotteryBooth('Caixa 2', CYAN),
-            LotteryBooth('Caixa 3', MAGENTA),
-            LotteryBooth('Caixa 4', YELLOW),
-            LotteryBooth('Caixa 5', RED)
+            LotteryBooth('1', BLUE, Client("PCD", 428, "CONTA", BLUE)),
+            LotteryBooth('2', CYAN),
+            LotteryBooth('3', MAGENTA),
+            LotteryBooth('4', YELLOW),
+            LotteryBooth('5', RED)
         ]
 
         self.clients = [
-            Client('Client 1', BLUE),
-            Client('Client 2', CYAN),
-            Client('Client 3', MAGENTA),
-            Client('Client 4', YELLOW),
-            Client('Client 5', RED)
+            Client("PCD", 428, "CONTA", BLUE),
+            Client("ADULTO", 915, "DEPOSITO", CYAN),
+            Client("IDOSO", 157, "SAQUE", MAGENTA),
+            Client("GRAVIDA", 602, "2° VIA", YELLOW),
+            Client("ADULTO", 329, "TIGRINHO", RED)
         ]
 
         self.booths_space = len(self.booths) * 5 + (len(self.booths) - 1) * 4
