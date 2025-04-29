@@ -2,6 +2,7 @@ from math import floor, ceil
 import curses
 import time
 from typing import Literal
+import threading
 
 from lottery_booth import LotteryBooth
 from client import Client
@@ -9,7 +10,7 @@ from client_queue import ClientQueue
 from consts import *
 
 COLORS = [GREEN, BLUE, CYAN, MAGENTA, RED, WHITE, YELLOW]
-NUMBER_OF_BOOTHS = 5
+NUMBER_OF_BOOTHS = 2
 
 
 class LotteryApp():
@@ -55,12 +56,12 @@ class LotteryApp():
         )
 
         actions = [
-            "  S - SAQUE         (1s)",
-            "  D - DEPOSITO      (2s)",
-            "  A - APOSENTADORIA (3s)",
-            "  C - CONTA         (4s)",
-            "  V - 2° VIA        (5s)",
-            "  M - MEGA-SENA     (6s)",
+            "  S - SAQUE         (3s)",
+            "  D - DEPOSITO      (4s)",
+            "  A - APOSENTADORIA (5s)",
+            "  C - CONTA         (6s)",
+            "  V - 2° VIA        (7s)",
+            "  M - MEGA-SENA     (8s)",
         ]
         for i in range(len(actions)):
             self.stdsrc.addstr(
@@ -120,6 +121,15 @@ class LotteryApp():
             client.draw(self.stdsrc, 16, x)
             x += 3
 
+    def check_queue_for_the_next_client(self):
+        for booth in self.booths:
+            if booth.semaphore.acquire(blocking=False):
+                client = self.client_queue.get_next()
+                if client:
+                    threading.Thread(target=booth.serve, args=[client]).start()
+                else:
+                    booth.semaphore.release()
+
     def run(self, stdsrc: curses.window):
         curses.start_color()
         curses.init_pair(GREEN, curses.COLOR_GREEN, curses.COLOR_BLACK)
@@ -144,6 +154,7 @@ class LotteryApp():
                         self.client_queue.add_client(clients[i])
                         clients[i] = None
 
+            self.check_queue_for_the_next_client()
             stdsrc.clear()
 
             self.draw_lottery()
@@ -161,13 +172,13 @@ if __name__ == '__main__':
         Client("ADULTO", 915, "DEPOSITO",  1),
         Client("IDOSO", 157, "SAQUE",  1),
         Client("GRAVIDA", 602, "2° VIA",  1),
+        Client("PCD", 329, "MEGA-SENA",  1),
         Client("ADULTO", 329, "MEGA-SENA",  2),
-        Client("ADULTO", 329, "MEGA-SENA",  2),
-        Client("ADULTO", 329, "MEGA-SENA",  3),
-        Client("ADULTO", 329, "MEGA-SENA",  2),
-        Client("ADULTO", 329, "MEGA-SENA",  2),
-        Client("ADULTO", 329, "MEGA-SENA",  4),
-        Client("ADULTO", 329, "MEGA-SENA",  5)
+        Client("IDOSO", 329, "MEGA-SENA",  3),
+        Client("PCD", 329, "MEGA-SENA",  2),
+        Client("GRAVIDA", 329, "MEGA-SENA",  2),
+        Client("IDOSO", 329, "MEGA-SENA",  4),
+        Client("IDOSO", 329, "MEGA-SENA",  5)
     ]
 
     booths = []
@@ -178,5 +189,5 @@ if __name__ == '__main__':
         if color_index >= len(COLORS):
             color_index = 0
 
-    app = LotteryApp(clients, booths, 'PS')
+    app = LotteryApp(clients, booths, 'SJF')
     curses.wrapper(app.run)

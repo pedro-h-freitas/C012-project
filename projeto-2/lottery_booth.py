@@ -4,7 +4,7 @@ import random
 import client as c_module
 from client import Client
 import curses
-# import lottery_vault as lv
+import lottery_vault as lv
 
 
 class LotteryBooth:
@@ -28,9 +28,12 @@ class LotteryBooth:
             self.client.draw(stdsrc, y+3, x+2)
 
     def serve(self, client):
+        self.client = client
         print(f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
         time.sleep(client.get_time())
         print(f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
+        self.client = None
+        self.semaphore.release()
 
 # Testing
 def client_task(booths: list[LotteryBooth], client):
@@ -38,11 +41,9 @@ def client_task(booths: list[LotteryBooth], client):
         random.shuffle(booths)
         for booth in booths:
             if booth.semaphore.acquire(blocking=False):
-                try:
-                    booth.serve(client)
-                    return
-                finally:
-                    booth.semaphore.release()
+                booth.serve(client)
+                return
+                
         time.sleep(0.1)
 
 
@@ -54,12 +55,12 @@ if __name__ == "__main__":
         Client(category='ADULTO', action='DEPOSITO', amount=915, arrive_time=12),
         Client(category='IDOSO', action='SAQUE', amount=157, arrive_time=3),
         Client(category='GRAVIDA', action='2° VIA', amount=602, arrive_time=8),
-        Client(category='ADULTO', action='TIGRINHO', amount=329, arrive_time=20),
+        Client(category='ADULTO', action='MEGA-SENA', amount=329, arrive_time=20),
         Client(category='PCD', action='APOSENTADORIA', amount=774, arrive_time=1),
         Client(category='IDOSO', action='DEPOSITO', amount=241, arrive_time=15),
         Client(category='GRAVIDA', action='SAQUE', amount=88, arrive_time=7),
         Client(category='ADULTO', action='CONTA', amount=503, arrive_time=18),
-        Client(category='PCD', action='TIGRINHO', amount=640, arrive_time=0)
+        Client(category='PCD', action='MEGA-SENA', amount=640, arrive_time=0)
     ]
 
     threads = []

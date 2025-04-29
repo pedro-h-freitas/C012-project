@@ -45,12 +45,12 @@ class Client:
 
     def get_time(self):
         time = {
-            "SAQUE": 1,
-            "DEPOSITO": 2,
-            "APOSENTADORIA": 3,
-            "CONTA": 4,
-            "2° VIA": 5,
-            "MEGA-SENA": 6
+            "SAQUE": 3,
+            "DEPOSITO": 4,
+            "APOSENTADORIA": 5,
+            "CONTA": 6,
+            "2° VIA": 7,
+            "MEGA-SENA": 8
         }
         return time[self.action]
 
