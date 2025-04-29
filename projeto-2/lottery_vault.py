@@ -1,0 +1,31 @@
+import threading
+
+class lottery_vault:
+    def __init__(self):
+        self.lock = threading.Lock()
+        self.cond = threading.Condition(self.lock)
+        self.amount = 0
+
+    def deposit_withdraw_money(self, thread_number, is_deposit, amount):
+        with self.lock:
+            if is_deposit:
+                self.amount += amount
+            else:
+                self.amount -= amount
+            print(f"Incremented to {self.amount} - Thread {thread_number}")
+
+# Testing
+monitor = lottery_vault()
+
+def producer():
+    for i in range(5):
+        monitor.deposit_withdraw_money(i, False, 500)
+
+
+threads = [threading.Thread(target=producer, name=f"Thread-{i}") for i in range(5)]
+
+for t in threads:
+    t.start()
+
+for t in threads:
+    t.join()
