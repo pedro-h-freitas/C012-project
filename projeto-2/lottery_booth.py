@@ -4,6 +4,7 @@ import random
 import client as c_module
 from client import Client
 import curses
+# import lottery_vault as lv
 
 
 class LotteryBooth:
@@ -26,19 +27,19 @@ class LotteryBooth:
         if self.client:
             self.client.draw(stdsrc, y+3, x+2)
 
-    def serve(self, category, amount, job_time):
-        print(f"ENTRADA - CABINE {self.id} - {category} - {amount} reais")
-        time.sleep(job_time)
-        print(f"SAÍDA - CABINE {self.id} - {category} - {amount} reais")
+    def serve(self, client):
+        print(f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
+        time.sleep(client.get_time())
+        print(f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
 
-
-def client_task(booths: list[LotteryBooth], category, amount, job_time):
+# Testing
+def client_task(booths: list[LotteryBooth], client):
     while True:
         random.shuffle(booths)
         for booth in booths:
             if booth.semaphore.acquire(blocking=False):
                 try:
-                    booth.serve(category, amount, job_time)
+                    booth.serve(client)
                     return
                 finally:
                     booth.semaphore.release()
@@ -46,21 +47,29 @@ def client_task(booths: list[LotteryBooth], category, amount, job_time):
 
 
 if __name__ == "__main__":
-    booths = [LotteryBooth(i) for i in range(1, 5)]
+    booths = [LotteryBooth(i, 1) for i in range(1, 5)]
 
-    clients = []
-    for c in c_module.clients:
-        c = c_module.clients[c]
-        t = threading.Thread(target=client_task, args=(
-            booths,
-            f"{c["category"]} - {c["action"]}",
-            c["amount"],
-            c_module.Client.get_time(c_module.Client, c["action"])
-        ))
+    clients = [
+        Client(category='PCD', action='CONTA', amount=428, arrive_time=5),
+        Client(category='ADULTO', action='DEPOSITO', amount=915, arrive_time=12),
+        Client(category='IDOSO', action='SAQUE', amount=157, arrive_time=3),
+        Client(category='GRAVIDA', action='2° VIA', amount=602, arrive_time=8),
+        Client(category='ADULTO', action='TIGRINHO', amount=329, arrive_time=20),
+        Client(category='PCD', action='APOSENTADORIA', amount=774, arrive_time=1),
+        Client(category='IDOSO', action='DEPOSITO', amount=241, arrive_time=15),
+        Client(category='GRAVIDA', action='SAQUE', amount=88, arrive_time=7),
+        Client(category='ADULTO', action='CONTA', amount=503, arrive_time=18),
+        Client(category='PCD', action='TIGRINHO', amount=640, arrive_time=0)
+    ]
+
+    threads = []
+    for c in clients:
+        print(c)
+        t = threading.Thread(target=client_task, args=(booths, c))
         t.start()
-        clients.append(t)
+        threads.append(t)
 
-    for t in clients:
+    for t in threads:
         t.join()
 
     print("Todos os clientes foram atendidos.")
