@@ -18,6 +18,7 @@ class LotteryApp():
         self.clients = clients
 
         self.booths_space = len(self.booths) * 5 + (len(self.booths) - 1) * 4
+        self.info_space = 25
 
         self._vault = 100
 
@@ -47,7 +48,61 @@ class LotteryApp():
         self._write_str_center(3, str(self._vault))
         self._write_str_center(4, '─'*(self.booths_space + 7))
 
-        self.stdsrc.addstr(0, self.width-20, 'D: Depósito')
+    def draw_infos(self):
+        self.stdsrc.addstr(
+            0, self.width - self.info_space,
+            "        INFOS       "
+        )
+
+        actions = [
+            "  S - SAQUE         (1s)",
+            "  D - DEPOSITO      (2s)",
+            "  A - APOSENTADORIA (3s)",
+            "  C - CONTA         (4s)",
+            "  V - 2° VIA        (5s)",
+            "  M - MEGA-SENA     (6s)",
+        ]
+        for i in range(len(actions)):
+            self.stdsrc.addstr(
+                i+2, self.width - self.info_space,
+                actions[i]
+            )
+
+        categories = [
+            (RED,       "IDOSO         (1)"),
+            (YELLOW,    "PCD           (2)"),
+            (BLUE,      "GRAVIDA       (3)"),
+            (GREEN,     "ADULTO        (4)")
+        ]
+        for i in range(len(categories)):
+            color, cat = categories[i]
+
+            self.stdsrc.attron(curses.color_pair(color))
+            self.stdsrc.addch(
+                i+3+len(actions),
+                self.width - self.info_space + 2,
+                " ", curses.A_REVERSE
+            )
+            self.stdsrc.attroff(curses.color_pair(color))
+
+            self.stdsrc.addstr(
+                i+3+len(actions),
+                self.width - self.info_space + 3,
+                " - " + cat
+            )
+
+        self.stdsrc.attron(curses.color_pair(BLUE))
+        for i in range(len(actions) + len(categories) + 3):
+            self.stdsrc.addstr(
+                i, self.width - self.info_space,
+                "║"
+            )
+        self.stdsrc.addstr(
+            len(actions) + len(categories) + 3,
+            self.width - self.info_space,
+            "╚════════════════════════"
+        )
+        self.stdsrc.attroff(curses.color_pair(BLUE))
 
     def draw_lottery_booths(self):
         y = 8
@@ -92,6 +147,7 @@ class LotteryApp():
             stdsrc.clear()
 
             self.draw_lottery()
+            self.draw_infos()
             self.draw_lottery_booths()
             self.draw_queue()
 
@@ -105,13 +161,13 @@ if __name__ == '__main__':
         Client("ADULTO", 915, "DEPOSITO",  1),
         Client("IDOSO", 157, "SAQUE",  1),
         Client("GRAVIDA", 602, "2° VIA",  1),
-        Client("ADULTO", 329, "TIGRINHO",  2),
-        Client("ADULTO", 329, "TIGRINHO",  2),
-        Client("ADULTO", 329, "TIGRINHO",  3),
-        Client("ADULTO", 329, "TIGRINHO",  2),
-        Client("ADULTO", 329, "TIGRINHO",  2),
-        Client("ADULTO", 329, "TIGRINHO",  4),
-        Client("ADULTO", 329, "TIGRINHO",  5)
+        Client("ADULTO", 329, "MEGA-SENA",  2),
+        Client("ADULTO", 329, "MEGA-SENA",  2),
+        Client("ADULTO", 329, "MEGA-SENA",  3),
+        Client("ADULTO", 329, "MEGA-SENA",  2),
+        Client("ADULTO", 329, "MEGA-SENA",  2),
+        Client("ADULTO", 329, "MEGA-SENA",  4),
+        Client("ADULTO", 329, "MEGA-SENA",  5)
     ]
 
     booths = []
@@ -122,5 +178,5 @@ if __name__ == '__main__':
         if color_index >= len(COLORS):
             color_index = 0
 
-    app = LotteryApp(clients, booths, 'SJF')
+    app = LotteryApp(clients, booths, 'PS')
     curses.wrapper(app.run)
