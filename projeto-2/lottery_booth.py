@@ -16,26 +16,30 @@ class LotteryBooth:
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
-        stdsrc.addstr(y, x, "┌───┐")
-        stdsrc.addstr(y+1, x, "│   │")
-        stdsrc.addstr(y+2, x, "├───┤")
-        stdsrc.addstr(y+3, x, "│   │")
+        stdsrc.addstr(y, x, "┌─────┐")
+        stdsrc.addstr(y+1, x, "│     │")
+        stdsrc.addstr(y+2, x, "├─────┤")
+        stdsrc.addstr(y+3, x, "│     │")
         stdsrc.attroff(curses.color_pair(self.color))
 
-        stdsrc.addstr(y+1, x+2,   " ", curses.A_REVERSE)
+        stdsrc.addstr(y+1, x+2, "😊")
 
         if self.client:
-            self.client.draw(stdsrc, y+3, x+2)
+            self.client.draw(stdsrc, y+3, x+3)
 
     def serve(self, client: Client):
         self.client = client
-        print(f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
+        print(
+            f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
         time.sleep(client.action_time)
-        print(f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
+        print(
+            f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
         self.client = None
         self.semaphore.release()
 
 # Testing
+
+
 def client_task(booths: list[LotteryBooth], client):
     while True:
         random.shuffle(booths)
@@ -43,7 +47,7 @@ def client_task(booths: list[LotteryBooth], client):
             if booth.semaphore.acquire(blocking=False):
                 booth.serve(client)
                 return
-                
+
         time.sleep(0.1)
 
 
@@ -52,12 +56,16 @@ if __name__ == "__main__":
 
     clients = [
         Client(category='PCD', action='CONTA', amount=428, arrive_time=5),
-        Client(category='ADULTO', action='DEPOSITO', amount=915, arrive_time=12),
+        Client(category='ADULTO', action='DEPOSITO',
+               amount=915, arrive_time=12),
         Client(category='IDOSO', action='SAQUE', amount=157, arrive_time=3),
         Client(category='GRAVIDA', action='2° VIA', amount=602, arrive_time=8),
-        Client(category='ADULTO', action='MEGA-SENA', amount=329, arrive_time=20),
-        Client(category='PCD', action='APOSENTADORIA', amount=774, arrive_time=1),
-        Client(category='IDOSO', action='DEPOSITO', amount=241, arrive_time=15),
+        Client(category='ADULTO', action='MEGA-SENA',
+               amount=329, arrive_time=20),
+        Client(category='PCD', action='APOSENTADORIA',
+               amount=774, arrive_time=1),
+        Client(category='IDOSO', action='DEPOSITO',
+               amount=241, arrive_time=15),
         Client(category='GRAVIDA', action='SAQUE', amount=88, arrive_time=7),
         Client(category='ADULTO', action='CONTA', amount=503, arrive_time=18),
         Client(category='PCD', action='MEGA-SENA', amount=640, arrive_time=0)

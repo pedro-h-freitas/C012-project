@@ -1,6 +1,7 @@
 import curses
 from consts import *
 
+
 class Client:
     def __init__(self, category: str, amount: int, action: str, arrive_time: int):
         self.category = category
@@ -12,9 +13,9 @@ class Client:
         self.action_time = self.__get_time_action(action)
         self.arrive_time = arrive_time
         self.wait_time: float
-    
+
     def __str__(self):
-        return '({}){:<10}({}){:<15} {}'.format(self.priority, self.category, self.action_time, self.action, self.amount)
+        return '({}){:<10}({}){:<15}{:.2f}'.format(self.priority, self.category, self.action_time, self.action, self.wait_time)
 
     def __get_priority(self, category):
         priority = {

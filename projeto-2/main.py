@@ -17,8 +17,9 @@ class LotteryApp():
     def __init__(self, clients: list[Client], booths: list[LotteryBooth], scheduling: Literal['SJF', 'PS']):
         self.booths = booths
         self.clients = clients
+        self.served_clients: list[Client] = []
 
-        self.booths_space = len(self.booths) * 5 + (len(self.booths) - 1) * 4
+        self.booths_space = len(self.booths) * 6 + (len(self.booths) - 1) * 4
         self.info_space = 25
 
         self._vault = 100
@@ -48,6 +49,28 @@ class LotteryApp():
         self._write_str_center(2, cofre_str)
         self._write_str_center(3, str(self._vault))
         self._write_str_center(4, '─'*(self.booths_space + 7))
+
+    def draw_hist(self):
+        self.stdsrc.addstr(0, 0, '{:<15}{:<10}{}'.format(
+            'CATEGORIA', 'AÇÃO', ' TEMPO ESPERA'))
+
+        y = 1
+        total_time = 0
+        for client in self.served_clients:
+            total_time += client.wait_time
+            self.stdsrc.addstr(y, 0, str(client))
+            y += 1
+
+        mean_wait_time = total_time / \
+            len(self.served_clients) if len(self.served_clients) != 0 else 0
+        self.stdsrc.addstr(
+            self.height - 2, 0,
+            '{:>20}{}{:.2f}'.format('', 'TOTAL: ', total_time)
+        )
+        self.stdsrc.addstr(
+            self.height - 1, 0,
+            '{:>20}{}{:.2f}'.format('', 'MEDIA: ', mean_wait_time)
+        )
 
     def draw_infos(self):
         self.stdsrc.addstr(
@@ -126,6 +149,9 @@ class LotteryApp():
             if booth.semaphore.acquire(blocking=False):
                 client = self.client_queue.get_next()
                 if client:
+                    wait_time = time.time() - self.start_time + client.arrive_time
+                    client.wait_time = wait_time
+                    self.served_clients.append(client)
                     threading.Thread(target=booth.serve, args=[client]).start()
                 else:
                     booth.semaphore.release()
@@ -159,6 +185,7 @@ class LotteryApp():
 
             self.draw_lottery()
             self.draw_infos()
+            self.draw_hist()
             self.draw_lottery_booths()
             self.draw_queue()
 
@@ -189,5 +216,5 @@ if __name__ == '__main__':
         if color_index >= len(COLORS):
             color_index = 0
 
-    app = LotteryApp(clients, booths, 'SJF')
+    app = LotteryApp(clients, booths, 'PS')
     curses.wrapper(app.run)
