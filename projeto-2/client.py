@@ -9,9 +9,10 @@ class Client:
         self.color = self.__get_color(category)
         self.char = self.__get_char(action)
         self.priority = self.__get_priority(category)
-        self.time_action = self.__get_time_action(action)
+        self.action_time = self.__get_time_action(action)
         self.arrive_time = arrive_time
-
+        self.serve_time: float
+    
     def __str__(self):
         return '({}){:<10}({}){:<15} {}'.format(self.priority, self.category, self.char, self.action, self.amount)
 

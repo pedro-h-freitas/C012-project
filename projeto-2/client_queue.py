@@ -9,7 +9,7 @@ class ClientQueue:
 
     def __order(self):
         if self.scheduling == 'SJF':
-            self.clients = sorted(self.clients, key=lambda c: c.time_action)
+            self.clients = sorted(self.clients, key=lambda c: c.action_time)
         elif self.scheduling == 'PS':
             self.clients = sorted(self.clients, key=lambda c: c.priority)
 
