@@ -9,6 +9,7 @@ class Client:
         self.color = self.__get_color(category)
         self.char = self.__get_char(action)
         self.priority = self.__get_priority(category)
+        self.time_action = self.__get_time_action(action)
         self.arrive_time = arrive_time
 
     def __str__(self):
@@ -43,7 +44,7 @@ class Client:
         }
         return action_char[action]
 
-    def get_time(self):
+    def __get_time_action(self, action):
         time = {
             "SAQUE": 3,
             "DEPOSITO": 4,
@@ -52,7 +53,7 @@ class Client:
             "2° VIA": 7,
             "MEGA-SENA": 8
         }
-        return time[self.action]
+        return time[action]
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))

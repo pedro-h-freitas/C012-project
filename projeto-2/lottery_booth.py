@@ -27,10 +27,10 @@ class LotteryBooth:
         if self.client:
             self.client.draw(stdsrc, y+3, x+2)
 
-    def serve(self, client):
+    def serve(self, client: Client):
         self.client = client
         print(f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
-        time.sleep(client.get_time())
+        time.sleep(client.time_action)
         print(f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
         self.client = None
         self.semaphore.release()
