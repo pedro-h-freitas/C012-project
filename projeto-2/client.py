@@ -11,10 +11,10 @@ class Client:
         self.priority = self.__get_priority(category)
         self.action_time = self.__get_time_action(action)
         self.arrive_time = arrive_time
-        self.serve_time: float
+        self.wait_time: float
     
     def __str__(self):
-        return '({}){:<10}({}){:<15} {}'.format(self.priority, self.category, self.char, self.action, self.amount)
+        return '({}){:<10}({}){:<15} {}'.format(self.priority, self.category, self.action_time, self.action, self.amount)
 
     def __get_priority(self, category):
         priority = {
