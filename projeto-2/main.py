@@ -61,15 +61,22 @@ class LotteryApp():
             self.stdsrc.addstr(y, 0, str(client))
             y += 1
 
+        self.stdsrc.attron(curses.color_pair(BLUE))
+        for i in range(len(self.served_clients)+4):
+            self.stdsrc.addstr(i, 39, '║')
+        self.stdsrc.addstr(len(self.served_clients)+1, 0, '─'*39+'╢')
+        self.stdsrc.addstr(len(self.served_clients)+4, 0, '═'*39+'╝')
+        self.stdsrc.attroff(curses.color_pair(BLUE))
+
         mean_wait_time = total_time / \
             len(self.served_clients) if len(self.served_clients) != 0 else 0
         self.stdsrc.addstr(
-            self.height - 2, 0,
-            '{:>20}{}{:.2f}'.format('', 'TOTAL: ', total_time)
+            len(self.served_clients)+2, 0,
+            '{:>23}{}{:.2f}'.format('', 'TOTAL: ', total_time)
         )
         self.stdsrc.addstr(
-            self.height - 1, 0,
-            '{:>20}{}{:.2f}'.format('', 'MEDIA: ', mean_wait_time)
+            len(self.served_clients)+3, 0,
+            '{:>23}{}{:.2f}'.format('', 'MEDIA: ', mean_wait_time)
         )
 
     def draw_infos(self):
