@@ -1,7 +1,7 @@
 from math import floor, ceil
 import curses
 import time
-from typing import Literal
+import argparse
 import threading
 
 from lottery_booth import LotteryBooth
@@ -11,7 +11,6 @@ from client_queue import ClientQueue
 from consts import *
 
 COLORS = [GREEN, BLUE, CYAN, MAGENTA, RED, WHITE, YELLOW]
-NUMBER_OF_BOOTHS = 2
 
 
 class LotteryApp():
@@ -198,13 +197,6 @@ class LotteryApp():
                 [booth.client is None for booth in self.booths]
             )
 
-            print('================')
-            print(is_empty_client_queue)
-            print(is_empty_wait_queue)
-            print(all_booths_empty)
-            print(is_empty_client_queue and is_empty_wait_queue and all_booths_empty)
-            print('================')
-
             if is_empty_client_queue and is_empty_wait_queue and all_booths_empty:
                 for booth in self.booths:
                     booth.close_booth()
@@ -230,7 +222,34 @@ class LotteryApp():
             time.sleep(0.2)  # Reduzindo o tempo de espera
 
 
+class ArgumentParserBuilder():
+    def build():
+        parser = argparse.ArgumentParser(description="Simulação de uma Loteria utilizando múltiplas threads para representar atendimento em caixas.")
+        parser.add_argument(
+            "--monitor",
+            action="store_true",
+            help="Ativa o uso de monitor para controle de concorrência."
+        )
+        parser.add_argument(
+            "--scheduling",
+            type=str,
+            choices=["PS", "SJF"],
+            required=True,
+            help="Define o algoritmo de escalonamento utilizado na fila de atendimento. 'PS' representa prioridade simples e 'SJF' representa o algoritmo Shortest Job First (menor tempo de atendimento primeiro)."
+        )
+        parser.add_argument(
+            "--booth",
+            type=int,
+            default=2,
+            required=True,
+            help="Número de caixas de atendimento simultâneo disponíveis na loteria. Representa o grau de concorrência (quantas threads atenderão clientes em paralelo)."
+        )
+        return parser.parse_args()
+    
+
 if __name__ == '__main__':
+    args = ArgumentParserBuilder.build()
+    
     clients = [
         Client("PCD", 100, "CONTA", 1),
         Client("ADULTO", 200, "DEPOSITO", 1),
@@ -245,12 +264,13 @@ if __name__ == '__main__':
         # Client("IDOSO", 70, "MEGA-SENA", 5)
     ]
 
-    vault = LotteryVault(1000, with_lock=False)
-    client_queue = ClientQueue(scheduling='PS')
+    vault = LotteryVault(1000, with_lock=args.monitor)
+    client_queue = ClientQueue(scheduling=args.scheduling)
+    number_of_booths = args.booth
 
     booths = []
     color_index = 0
-    for i in range(NUMBER_OF_BOOTHS):
+    for i in range(number_of_booths):
         booths.append(LotteryBooth(i, COLORS[color_index], vault))
         color_index += 1
         if color_index >= len(COLORS):
