@@ -5,14 +5,18 @@ import client as c_module
 from client import Client
 import curses
 import lottery_vault as lv
+from lottery_vault import LotteryVault
 
 
 class LotteryBooth:
-    def __init__(self, booth_id, color, client=None):
+    def __init__(self, booth_id, color, vault: LotteryVault, client=None):
         self.id = booth_id
         self.semaphore = threading.Semaphore(1)
         self.color = color
         self.client: Client | None = client
+
+        self.__vault = vault
+        self.__transaction_array = []
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
@@ -30,16 +34,29 @@ class LotteryBooth:
     def serve(self, client: Client):
         self.client = client
         print(
-            f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais")
+            f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais"
+        )
+        if client.action == 'SAQUE':
+            self.__transaction_array.append(-client.amount)
+        else:
+            self.__transaction_array.append(client.amount)
         time.sleep(client.action_time)
         print(
-            f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais")
+            f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais"
+        )
         self.client = None
         self.semaphore.release()
 
+    def close_booth(self):
+        print(f'Fechando o caixa: {self.id}')
+        print(self.__transaction_array)
+        threading.Thread(
+            target=self.__vault.transaction,
+            args=[self.__transaction_array]
+        ).start()
+
+
 # Testing
-
-
 def client_task(booths: list[LotteryBooth], client):
     while True:
         random.shuffle(booths)

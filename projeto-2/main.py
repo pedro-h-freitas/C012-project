@@ -5,6 +5,7 @@ from typing import Literal
 import threading
 
 from lottery_booth import LotteryBooth
+from lottery_booth import LotteryVault
 from client import Client
 from client_queue import ClientQueue
 from consts import *
@@ -14,7 +15,7 @@ NUMBER_OF_BOOTHS = 2
 
 
 class LotteryApp():
-    def __init__(self, clients: list[Client], booths: list[LotteryBooth], scheduling: Literal['SJF', 'PS']):
+    def __init__(self, clients: list[Client], booths: list[LotteryBooth], client_queue: ClientQueue, vault: LotteryVault):
         self.booths = booths
         self.clients = clients
         self.served_clients: list[Client] = []
@@ -22,9 +23,8 @@ class LotteryApp():
         self.booths_space = len(self.booths) * 6 + (len(self.booths) - 1) * 4
         self.info_space = 25
 
-        self._vault = 100
-
-        self.client_queue = ClientQueue(scheduling)
+        self.vault = vault
+        self.client_queue = client_queue
 
         self.stdsrc: curses.window
         self.height: int
@@ -47,7 +47,7 @@ class LotteryApp():
         self.stdsrc.attroff(curses.color_pair(GREEN))
 
         self._write_str_center(2, cofre_str)
-        self._write_str_center(3, str(self._vault))
+        self._write_str_center(3, str(self.vault.amount))
         self._write_str_center(4, '─'*(self.booths_space + 7))
 
     def draw_hist(self):
@@ -181,15 +181,45 @@ class LotteryApp():
         while True:
             time_now = time.time()
 
-            for i in range(len(clients)):
-                if clients[i]:
-                    if (time_now - self.start_time) >= clients[i].arrive_time:
-                        self.client_queue.add_client(clients[i])
-                        clients[i] = None
+            for i in range(len(self.clients)):
+                if self.clients[i]:
+                    if (time_now - self.start_time) >= self.clients[i].arrive_time:
+                        self.client_queue.add_client(self.clients[i])
+                        self.clients[i] = None
 
             self.check_queue_for_the_next_client()
             stdsrc.clear()
 
+            is_empty_client_queue = len(self.client_queue.get_clients()) == 0
+            is_empty_wait_queue = all(
+                [client is None for client in self.clients]
+            )
+            all_booths_empty = all(
+                [booth.client is None for booth in self.booths]
+            )
+
+            print('================')
+            print(is_empty_client_queue)
+            print(is_empty_wait_queue)
+            print(all_booths_empty)
+            print(is_empty_client_queue and is_empty_wait_queue and all_booths_empty)
+            print('================')
+
+            if is_empty_client_queue and is_empty_wait_queue and all_booths_empty:
+                for booth in self.booths:
+                    booth.close_booth()
+                break
+
+            self.draw_lottery()
+            self.draw_infos()
+            self.draw_hist()
+            self.draw_lottery_booths()
+            self.draw_queue()
+
+            stdsrc.refresh()
+            time.sleep(0.2)  # Reduzindo o tempo de espera
+
+        while True:
             self.draw_lottery()
             self.draw_infos()
             self.draw_hist()
@@ -202,26 +232,29 @@ class LotteryApp():
 
 if __name__ == '__main__':
     clients = [
-        Client("PCD", 428, "CONTA",  1),
-        Client("ADULTO", 915, "DEPOSITO",  1),
-        Client("IDOSO", 157, "SAQUE",  1),
-        Client("GRAVIDA", 602, "2° VIA",  1),
-        Client("PCD", 329, "MEGA-SENA",  1),
-        Client("ADULTO", 329, "MEGA-SENA",  2),
-        Client("IDOSO", 329, "MEGA-SENA",  3),
-        Client("PCD", 329, "MEGA-SENA",  2),
-        Client("GRAVIDA", 329, "MEGA-SENA",  2),
-        Client("IDOSO", 329, "MEGA-SENA",  4),
-        Client("IDOSO", 329, "MEGA-SENA",  5)
+        Client("PCD", 100, "CONTA", 1),
+        Client("ADULTO", 200, "DEPOSITO", 1),
+        Client("IDOSO", 50, "SAQUE", 1),
+        Client("GRAVIDA", 600, "2° VIA", 1),
+        Client("PCD", 10, "MEGA-SENA", 1),
+        Client("ADULTO", 20, "MEGA-SENA", 2),
+        Client("IDOSO", 30, "MEGA-SENA", 3),
+        # Client("PCD", 40, "MEGA-SENA", 2),
+        # Client("GRAVIDA", 50, "MEGA-SENA", 2),
+        # Client("IDOSO", 60, "MEGA-SENA", 4),
+        # Client("IDOSO", 70, "MEGA-SENA", 5)
     ]
+
+    vault = LotteryVault(1000, with_lock=False)
+    client_queue = ClientQueue(scheduling='PS')
 
     booths = []
     color_index = 0
     for i in range(NUMBER_OF_BOOTHS):
-        booths.append(LotteryBooth(i, COLORS[color_index]))
+        booths.append(LotteryBooth(i, COLORS[color_index], vault))
         color_index += 1
         if color_index >= len(COLORS):
             color_index = 0
 
-    app = LotteryApp(clients, booths, 'PS')
+    app = LotteryApp(clients, booths, client_queue, vault)
     curses.wrapper(app.run)
