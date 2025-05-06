@@ -1,10 +1,8 @@
 import threading
 import time
 import random
-import client as c_module
 from client import Client
 import curses
-import lottery_vault as lv
 from lottery_vault import LotteryVault
 
 
