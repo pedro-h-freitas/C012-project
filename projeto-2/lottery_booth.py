@@ -18,16 +18,16 @@ class LotteryBooth:
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
-        stdsrc.addstr(y, x,   "┌─────┐")
-        stdsrc.addstr(y+1, x, "│     │")
-        stdsrc.addstr(y+2, x, "├─────┤")
+        stdsrc.addstr(y, x,   "╭─────╮")
+        stdsrc.addstr(y+1, x, "│╱   ╲│")
+        stdsrc.addstr(y+2, x, "├┴───┴┤")
         stdsrc.addstr(y+3, x, "│     │")
 
         hr = time.time()
         if int(hr) % 2 == 0:
-            stdsrc.addstr(y+1, x+2, "▝.▘")
+            stdsrc.addstr(y+1, x+2, "▝_▘")
         else:
-            stdsrc.addstr(y+1, x+2, "╺.╸")
+            stdsrc.addstr(y+1, x+2, "-_-")
         stdsrc.attroff(curses.color_pair(self.color))
 
         if self.client:
@@ -56,48 +56,3 @@ class LotteryBooth:
             target=self.__vault.transaction,
             args=[self.__transaction_array]
         ).start()
-
-
-# Testing
-def client_task(booths: list[LotteryBooth], client):
-    while True:
-        random.shuffle(booths)
-        for booth in booths:
-            if booth.semaphore.acquire(blocking=False):
-                booth.serve(client)
-                return
-
-        time.sleep(0.1)
-
-
-if __name__ == "__main__":
-    booths = [LotteryBooth(i, 1) for i in range(1, 5)]
-
-    clients = [
-        Client(category='PCD', action='CONTA', amount=428, arrive_time=5),
-        Client(category='ADULTO', action='DEPOSITO',
-               amount=915, arrive_time=12),
-        Client(category='IDOSO', action='SAQUE', amount=157, arrive_time=3),
-        Client(category='GRAVIDA', action='2° VIA', amount=602, arrive_time=8),
-        Client(category='ADULTO', action='MEGA-SENA',
-               amount=329, arrive_time=20),
-        Client(category='PCD', action='APOSENTADORIA',
-               amount=774, arrive_time=1),
-        Client(category='IDOSO', action='DEPOSITO',
-               amount=241, arrive_time=15),
-        Client(category='GRAVIDA', action='SAQUE', amount=88, arrive_time=7),
-        Client(category='ADULTO', action='CONTA', amount=503, arrive_time=18),
-        Client(category='PCD', action='MEGA-SENA', amount=640, arrive_time=0)
-    ]
-
-    threads = []
-    for c in clients:
-        print(c)
-        t = threading.Thread(target=client_task, args=(booths, c))
-        t.start()
-        threads.append(t)
-
-    for t in threads:
-        t.join()
-
-    print("Todos os clientes foram atendidos.")

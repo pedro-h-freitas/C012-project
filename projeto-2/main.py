@@ -183,6 +183,7 @@ class LotteryApp():
             for i in range(len(self.clients)):
                 if self.clients[i]:
                     if (time_now - self.start_time) >= self.clients[i].arrive_time:
+                        self.clients[i].arrive_time = time.time() - self.start_time
                         self.client_queue.add_client(self.clients[i])
                         self.clients[i] = None
 
