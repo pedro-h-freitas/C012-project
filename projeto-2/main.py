@@ -1,8 +1,8 @@
-from math import floor, ceil
 import curses
 import time
 import argparse
 import threading
+from typing import Literal
 
 from lottery_booth import LotteryBooth
 from lottery_booth import LotteryVault
@@ -14,14 +14,22 @@ COLORS = [GREEN, BLUE, CYAN, MAGENTA, RED, WHITE, YELLOW]
 
 
 class LotteryApp():
-    def __init__(self, clients: list[Client], booths: list[LotteryBooth], client_queue: ClientQueue, vault: LotteryVault):
+    def __init__(
+        self,
+        clients: list[Client],
+        booths: list[LotteryBooth],
+        client_queue: ClientQueue,
+        vault: LotteryVault,
+        history_sort: Literal["ARRIVE", "SERVE", "FINISH"] = "SERVE"
+    ):
         self.clients = clients  # Lista dos clientes que chegarão na lotérica
         self.booths = booths
         self.client_queue = client_queue
         self.vault = vault
+        self.history_sort = history_sort
 
-        # Lista de clientes que já foram atendidos
-        self.served_clients: list[Client] = []
+        # Lista de clientes que aparecerão no histórico
+        self.clients_history: list[Client] = []
 
         # Variaveis para controle
         self.booths_space = len(self.booths) * 6 + (len(self.booths) - 1) * 4
@@ -36,6 +44,9 @@ class LotteryApp():
         self.stdsrc: curses.window
 
         self.start_time: float
+
+    def __add_to_hist(self, client: Client):
+        self.clients_history.append(client)
 
     def draw_lottery(self):
         self.stdsrc.attron(curses.color_pair(GREEN))
@@ -58,14 +69,16 @@ class LotteryApp():
 
         y = 1
         total_time = 0
-        for client in self.served_clients:
-            total_time += client.wait_time
+        for client in self.clients_history:
+            if client.wait_time:
+                total_time += client.wait_time
 
+            served_time = client.arrive_time + client.wait_time if client.wait_time else None
             c_str = f'{client.id:>2}   ' +\
                 f'{client.arrive_time:>9.2f}  ' +\
-                f'{client.arrive_time + client.wait_time:>7.2f}  ' +\
+                f'{f"{served_time:>7.2f}" if served_time else f"{'':>7}"}  ' +\
                 f'{f"{client.end_time:>5.2f}" if client.end_time else f"{'':>5}"} ' +\
-                f'{client.wait_time:>7.2f}'
+                f'{f"{client.wait_time:>7.2f}" if client.wait_time else f"{'':>7}"}'
 
             self.stdsrc.addstr(
                 y, self.width - self.hist_space + 2, c_str
@@ -77,7 +90,7 @@ class LotteryApp():
             y += 1
 
         self.stdsrc.attron(curses.color_pair(GREEN))
-        for i in range(len(self.served_clients)+4):
+        for i in range(len(self.clients_history)+4):
             self.stdsrc.addstr(
                 i, self.width - self.hist_space + 41, '║'
             )
@@ -85,26 +98,27 @@ class LotteryApp():
                 i, self.width - self.hist_space, '║'
             )
         self.stdsrc.addstr(
-            len(self.served_clients)+1,
+            len(self.clients_history)+1,
             self.width - self.hist_space,
             '╟'+'─'*40+'╢'
         )
         self.stdsrc.addstr(
-            len(self.served_clients)+4,
+            len(self.clients_history)+4,
             self.width - self.hist_space,
             '╚'+'═'*40+'╝'
         )
         self.stdsrc.attroff(curses.color_pair(GREEN))
 
-        mean_wait_time = total_time / \
-            len(self.served_clients) if len(self.served_clients) != 0 else 0
+        mean_wait_time = total_time / len(self.clients_history) \
+            if len(self.clients_history) != 0 else 0
+
         self.stdsrc.addstr(
-            len(self.served_clients)+2,
+            len(self.clients_history)+2,
             self.width - self.hist_space + 20,
             f'ESPERA TOTAL: {total_time:>6.2f}'
         )
         self.stdsrc.addstr(
-            len(self.served_clients)+3,
+            len(self.clients_history)+3,
             self.width - self.hist_space + 20,
             f'ESPERA MEDIA: {mean_wait_time:>6.2f}'
         )
@@ -198,13 +212,14 @@ class LotteryApp():
             if booth.semaphore.acquire(blocking=False):
                 client = self.client_queue.get_next()
                 if client:
-                    wait_time = time.time() - self.start_time - client.arrive_time
-                    client.wait_time = wait_time
-                    self.served_clients.append(client)
-                    call_time = time.time() - self.start_time
+                    if self.history_sort == "SERVE":
+                        self.__add_to_hist(client)
+
                     threading.Thread(
                         target=booth.serve,
-                        args=[client, call_time]
+                        args=[
+                            client, self.start_time, self.__add_to_hist if self.history_sort == "FINISH" else None
+                        ]
                     ).start()
                 else:
                     booth.semaphore.release()
@@ -241,6 +256,10 @@ class LotteryApp():
                 if self.check_client_arrived(client):
                     client.arrive_time = time.time() - self.start_time
                     self.client_queue.add_client(client)
+
+                    if self.history_sort == "ARRIVE":
+                        self.__add_to_hist(client)
+
                     self.clients[i] = None
 
             self.serve_clients_if_possible()
@@ -297,6 +316,13 @@ class ArgumentParserBuilder():
             required=True,
             help="Número de caixas de atendimento simultâneo disponíveis na loteria. Representa o grau de concorrência (quantas threads atenderão clientes em paralelo)."
         )
+        parser.add_argument(
+            "--history",
+            type=str,
+            choices=["ARRIVE", "SERVE", "FINISH"],
+            default="SERVE",
+            help="Momento em que o cliente irá aparecer no histórico (chegada, atendido ou finalizado)."
+        )
         return parser.parse_args()
 
 
@@ -335,5 +361,5 @@ if __name__ == '__main__':
         if color_index >= len(COLORS):
             color_index = 0
 
-    app = LotteryApp(clients, booths, client_queue, vault)
+    app = LotteryApp(clients, booths, client_queue, vault, args.history)
     curses.wrapper(app.run)

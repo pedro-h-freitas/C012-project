@@ -13,7 +13,7 @@ class Client:
         self.priority = self.__get_priority(category)
         self.action_time = self.__get_time_action(action)
         self.arrive_time = arrive_time
-        self.wait_time: float
+        self.wait_time: float | None = None
         self.end_time: float | None = None
 
     def __str__(self):

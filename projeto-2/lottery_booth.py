@@ -1,8 +1,10 @@
-import threading
+
 import time
-import random
-from client import Client
 import curses
+import threading
+from typing import Callable
+
+from client import Client
 from lottery_vault import LotteryVault
 
 
@@ -33,25 +35,29 @@ class LotteryBooth:
         if self.client:
             self.client.draw(stdsrc, y+3, x+3)
 
-    def serve(self, client: Client, call_time: float):
+    def serve(self, client: Client, start_time: float, add_to_hist: Callable[[Client], None] | None = None):
         self.client = client
-        print(
-            f"{call_time:.2f} ENTRADA - CABINE {self.id} - {client.category} - {client.id}"
-        )
+
+        wait_time = time.time() - start_time - client.arrive_time
+        call_time = time.time() - start_time
+
+        client.wait_time = wait_time
 
         if client.action == 'SAQUE':
             self.__transaction_array.append(-client.amount)
         else:
             self.__transaction_array.append(client.amount)
-        s = time.time()
-        time.sleep(client.action_time)
-        e = time.time()
 
-        realese_time = call_time + e - s
-        print(
-            f"{realese_time:.2f} SAÍDA - CABINE {self.id} - {client.category} - {client.id}"
-        )
-        self.client.end_time = realese_time
+        sleep_start = time.time()
+        time.sleep(client.action_time)
+        sleep_end = time.time()
+
+        end_time = call_time + sleep_end - sleep_start
+        self.client.end_time = end_time
+
+        if add_to_hist:
+            add_to_hist(self.client)
+
         self.client = None
         self.semaphore.release()
 
