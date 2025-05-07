@@ -15,15 +15,17 @@ COLORS = [GREEN, BLUE, CYAN, MAGENTA, RED, WHITE, YELLOW]
 
 class LotteryApp():
     def __init__(self, clients: list[Client], booths: list[LotteryBooth], client_queue: ClientQueue, vault: LotteryVault):
+        self.clients = clients  # Lista dos clientes que chegarão na lotérica
         self.booths = booths
-        self.clients = clients
+        self.client_queue = client_queue
+        self.vault = vault
+
+        # Lista de clientes que já foram atendidos
         self.served_clients: list[Client] = []
 
+        # Variaveis para contr
         self.booths_space = len(self.booths) * 6 + (len(self.booths) - 1) * 4
         self.info_space = 25
-
-        self.vault = vault
-        self.client_queue = client_queue
 
         self.stdsrc: curses.window
         self.height: int
@@ -31,27 +33,29 @@ class LotteryApp():
 
         self.start_time: float
 
-    def _write_str_center(self, y, str):
+    def __write_str_center(self, y, str):
         x = floor(self.width / 2) - ceil(len(str) / 2)
 
         self.stdsrc.addstr(y, x, str)
 
     def draw_lottery(self):
-        loterica_str = '─'*10 + ' LOTERICA ' + '─'*10
+        loterica_str = '─'*(ceil((self.booths_space) / 2)+3) + \
+            ' LOTERICA '+'─'*(floor((self.booths_space) / 2)+3)
         cofre_str = '─'*ceil((self.booths_space) / 2) + \
             ' COFRE '+'─'*floor((self.booths_space) / 2)
 
         self.stdsrc.attron(curses.color_pair(GREEN))
-        self._write_str_center(0, loterica_str)
+        self.__write_str_center(0, loterica_str)
         self.stdsrc.attroff(curses.color_pair(GREEN))
 
-        self._write_str_center(2, cofre_str)
-        self._write_str_center(3, str(self.vault.amount))
-        self._write_str_center(4, '─'*(self.booths_space + 7))
+        self.__write_str_center(2, cofre_str)
+        self.__write_str_center(3, str(self.vault.amount))
+        self.__write_str_center(4, '─'*(len(cofre_str)))
 
     def draw_hist(self):
-        self.stdsrc.addstr(0, 0, '{:<15}{:<10}{}'.format(
-            'CATEGORIA', 'AÇÃO', ' TEMPO ESPERA'))
+        self.stdsrc.addstr(0, 0, '{:<16}{:<10}{}'.format(
+            '   CATEGORIA', 'AÇÃO', ' TEMPO ESPERA'
+        ))
 
         y = 1
         total_time = 0
@@ -62,20 +66,20 @@ class LotteryApp():
 
         self.stdsrc.attron(curses.color_pair(BLUE))
         for i in range(len(self.served_clients)+4):
-            self.stdsrc.addstr(i, 39, '║')
-        self.stdsrc.addstr(len(self.served_clients)+1, 0, '─'*39+'╢')
-        self.stdsrc.addstr(len(self.served_clients)+4, 0, '═'*39+'╝')
+            self.stdsrc.addstr(i, 40, '║')
+        self.stdsrc.addstr(len(self.served_clients)+1, 0, '─'*40+'╢')
+        self.stdsrc.addstr(len(self.served_clients)+4, 0, '═'*40+'╝')
         self.stdsrc.attroff(curses.color_pair(BLUE))
 
         mean_wait_time = total_time / \
             len(self.served_clients) if len(self.served_clients) != 0 else 0
         self.stdsrc.addstr(
             len(self.served_clients)+2, 0,
-            '{:>23}{}{:.2f}'.format('', 'TOTAL: ', total_time)
+            '{:>26}{}{:>6.2f}'.format('', 'TOTAL: ', total_time)
         )
         self.stdsrc.addstr(
             len(self.served_clients)+3, 0,
-            '{:>23}{}{:.2f}'.format('', 'MEDIA: ', mean_wait_time)
+            '{:>26}{}{:>6.2f}'.format('', 'MEDIA: ', mean_wait_time)
         )
 
     def draw_infos(self):
@@ -134,12 +138,12 @@ class LotteryApp():
         )
         self.stdsrc.attroff(curses.color_pair(BLUE))
 
-    def draw_lottery_booths(self):
+    def draw_lottery_booths(self, is_running: bool = True):
         y = 8
         x = floor(self.width / 2) - ceil(self.booths_space / 2)
 
         for booth in self.booths:
-            booth.draw(self.stdsrc, y, x)
+            booth.draw(self.stdsrc, y, x, is_running)
             x += 9
 
     def draw_queue(self):
@@ -150,7 +154,15 @@ class LotteryApp():
             client.draw(self.stdsrc, 16, x)
             x += 3
 
-    def check_queue_for_the_next_client(self):
+    def __reset_cursor(self):
+        self.stdsrc.addch(self.height - 1, self.width - 2, ' ')
+
+    def check_client_arrived(self, client: Client | None) -> bool:
+        if client:
+            return (time.time() - self.start_time) >= client.arrive_time
+        return False
+
+    def serve_clients_if_possible(self):
         for booth in self.booths:
             if booth.semaphore.acquire(blocking=False):
                 client = self.client_queue.get_next()
@@ -161,6 +173,17 @@ class LotteryApp():
                     threading.Thread(target=booth.serve, args=[client]).start()
                 else:
                     booth.semaphore.release()
+
+    def check_clients_end(self) -> bool:
+        is_empty_wait_queue = all(
+            [client is None for client in self.clients]
+        )
+        is_empty_client_queue = len(self.client_queue.get_clients()) == 0
+        all_booths_empty = all(
+            [booth.client is None for booth in self.booths]
+        )
+
+        return is_empty_client_queue and is_empty_wait_queue and all_booths_empty
 
     def run(self, stdsrc: curses.window):
         curses.start_color()
@@ -178,54 +201,48 @@ class LotteryApp():
 
         self.start_time = time.time()
         while True:
-            time_now = time.time()
+            # Processamento
+            for i, client in enumerate(self.clients):
+                if self.check_client_arrived(client):
+                    client.arrive_time = time.time() - self.start_time
+                    self.client_queue.add_client(client)
+                    self.clients[i] = None
 
-            for i in range(len(self.clients)):
-                if self.clients[i]:
-                    if (time_now - self.start_time) >= self.clients[i].arrive_time:
-                        self.clients[i].arrive_time = time.time() - self.start_time
-                        self.client_queue.add_client(self.clients[i])
-                        self.clients[i] = None
+            self.serve_clients_if_possible()
 
-            self.check_queue_for_the_next_client()
-            stdsrc.clear()
-
-            is_empty_client_queue = len(self.client_queue.get_clients()) == 0
-            is_empty_wait_queue = all(
-                [client is None for client in self.clients]
-            )
-            all_booths_empty = all(
-                [booth.client is None for booth in self.booths]
-            )
-
-            if is_empty_client_queue and is_empty_wait_queue and all_booths_empty:
+            if self.check_clients_end():
                 for booth in self.booths:
                     booth.close_booth()
                 break
 
+            # Desenha componentes
+            self.stdsrc.clear()
             self.draw_lottery()
-            self.draw_infos()
-            self.draw_hist()
             self.draw_lottery_booths()
             self.draw_queue()
+            self.draw_hist()
+            self.draw_infos()
+            self.__reset_cursor()
 
-            stdsrc.refresh()
-            time.sleep(0.2)  # Reduzindo o tempo de espera
+            self.stdsrc.refresh()
 
         while True:
+            # Desenha componentes
+            self.stdsrc.clear()
             self.draw_lottery()
-            self.draw_infos()
+            self.draw_lottery_booths(is_running=False)
             self.draw_hist()
-            self.draw_lottery_booths()
-            self.draw_queue()
+            self.draw_infos()
+            self.__reset_cursor()
 
-            stdsrc.refresh()
-            time.sleep(0.2)  # Reduzindo o tempo de espera
+            self.stdsrc.refresh()
 
 
 class ArgumentParserBuilder():
     def build():
-        parser = argparse.ArgumentParser(description="Simulação de uma Loteria utilizando múltiplas threads para representar atendimento em caixas.")
+        parser = argparse.ArgumentParser(
+            description="Simulação de uma Loteria utilizando múltiplas threads para representar atendimento em caixas."
+        )
         parser.add_argument(
             "--monitor",
             action="store_true",
@@ -246,28 +263,28 @@ class ArgumentParserBuilder():
             help="Número de caixas de atendimento simultâneo disponíveis na loteria. Representa o grau de concorrência (quantas threads atenderão clientes em paralelo)."
         )
         return parser.parse_args()
-    
+
 
 if __name__ == '__main__':
     args = ArgumentParserBuilder.build()
-    
+
     clients = [
-        Client("PCD", 100, "CONTA", 1),
-        Client("ADULTO", 200, "DEPOSITO", 1),
-        Client("IDOSO", 50, "SAQUE", 1),
-        Client("GRAVIDA", 600, "2° VIA", 1),
-        Client("PCD", 10, "MEGA-SENA", 1),
-        Client("ADULTO", 20, "MEGA-SENA", 2),
-        Client("PCD", 40, "APOSENTADORIA", 2),
-        Client("GRAVIDA", 50, "DEPOSITO", 2),
-        Client("IDOSO", 30, "APOSENTADORIA", 3),
-        Client("IDOSO", 60, "DEPOSITO", 3),
-        Client("IDOSO", 70, "SAQUE", 3),
-        Client("ADULTO", 80, "MEGA-SENA", 4),
-        Client("GRAVIDA", 100, "SAQUE", 4),
-        Client("ADULTO", 20, "SAQUE", 5),
-        Client("GRAVIDA", 20, "2° VIA", 5),
-        Client("ADULTO", 20, "2° VIA", 20)
+        Client(1, "PCD", 100, "CONTA", 1),
+        Client(2, "ADULTO", 200, "DEPOSITO", 1),
+        Client(3, "IDOSO", 50, "SAQUE", 1),
+        Client(4, "GRAVIDA", 600, "2° VIA", 1),
+        Client(5, "PCD", 10, "MEGA-SENA", 1),
+        Client(6, "ADULTO", 20, "MEGA-SENA", 2),
+        Client(7, "PCD", 40, "APOSENTADORIA", 2),
+        Client(8, "GRAVIDA", 50, "DEPOSITO", 2),
+        Client(9, "IDOSO", 30, "APOSENTADORIA", 3),
+        Client(10, "IDOSO", 60, "DEPOSITO", 3),
+        Client(11, "IDOSO", 70, "SAQUE", 3),
+        Client(12, "ADULTO", 80, "MEGA-SENA", 4),
+        Client(13, "GRAVIDA", 100, "SAQUE", 4),
+        Client(14, "ADULTO", 20, "SAQUE", 5),
+        Client(15, "GRAVIDA", 20, "2° VIA", 5),
+        Client(16, "ADULTO", 20, "2° VIA", 20)
     ]
 
     vault = LotteryVault(1000, with_lock=args.monitor)

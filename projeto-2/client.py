@@ -3,7 +3,8 @@ from consts import *
 
 
 class Client:
-    def __init__(self, category: str, amount: int, action: str, arrive_time: int):
+    def __init__(self, id: int, category: str, amount: int, action: str, arrive_time: int):
+        self.id = id
         self.category = category
         self.action = action
         self.amount = amount
@@ -15,7 +16,7 @@ class Client:
         self.wait_time: float
 
     def __str__(self):
-        return '({}){:<10}({}){:<15}{:.2f}'.format(self.priority, self.category, self.action_time, self.action, self.wait_time)
+        return '{:<3}({}){:<10}({}){:<15}{:>5.2f}'.format(self.id, self.priority, self.category, self.action_time, self.action, self.wait_time)
 
     def __get_priority(self, category):
         priority = {

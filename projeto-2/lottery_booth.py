@@ -16,7 +16,7 @@ class LotteryBooth:
         self.__vault = vault
         self.__transaction_array = []
 
-    def draw(self, stdsrc: curses.window, y: int, x: int):
+    def draw(self, stdsrc: curses.window, y: int, x: int, is_running: bool = True):
         stdsrc.attron(curses.color_pair(self.color))
         stdsrc.addstr(y, x,   "╭─────╮")
         stdsrc.addstr(y+1, x, "│╱   ╲│")
@@ -24,7 +24,7 @@ class LotteryBooth:
         stdsrc.addstr(y+3, x, "│     │")
 
         hr = time.time()
-        if int(hr) % 2 == 0:
+        if is_running and int(hr) % 2 == 0:
             stdsrc.addstr(y+1, x+2, "▝_▘")
         else:
             stdsrc.addstr(y+1, x+2, "-_-")
