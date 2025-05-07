@@ -286,7 +286,7 @@ class ArgumentParserBuilder():
         parser.add_argument(
             "--scheduling",
             type=str,
-            choices=["PS", "SJF"],
+            choices=["PS", "SJF", "FCFS"],
             required=True,
             help="Define o algoritmo de escalonamento utilizado na fila de atendimento. 'PS' representa prioridade simples e 'SJF' representa o algoritmo Shortest Job First (menor tempo de atendimento primeiro)."
         )

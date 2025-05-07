@@ -3,7 +3,7 @@ from typing import Literal
 
 
 class ClientQueue:
-    def __init__(self, scheduling: Literal['SJF', 'PS'], clients: list[Client] = []):
+    def __init__(self, scheduling: Literal['SJF', 'PS', 'FCFS'], clients: list[Client] = []):
         self.clients = clients
         self.scheduling = scheduling
 
@@ -12,6 +12,8 @@ class ClientQueue:
             self.clients = sorted(self.clients, key=lambda c: c.action_time)
         elif self.scheduling == 'PS':
             self.clients = sorted(self.clients, key=lambda c: c.priority)
+        elif self.scheduling == 'FCFS':
+            self.clients = sorted(self.clients, key=lambda c: c.arrive_time)
 
     def get_next(self):
         if self.clients:
