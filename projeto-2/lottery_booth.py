@@ -18,13 +18,17 @@ class LotteryBooth:
 
     def draw(self, stdsrc: curses.window, y: int, x: int):
         stdsrc.attron(curses.color_pair(self.color))
-        stdsrc.addstr(y, x, "┌─────┐")
+        stdsrc.addstr(y, x,   "┌─────┐")
         stdsrc.addstr(y+1, x, "│     │")
         stdsrc.addstr(y+2, x, "├─────┤")
         stdsrc.addstr(y+3, x, "│     │")
-        stdsrc.attroff(curses.color_pair(self.color))
 
-        stdsrc.addstr(y+1, x+2, "😊")
+        hr = time.time()
+        if int(hr) % 2 == 0:
+            stdsrc.addstr(y+1, x+2, "▝.▘")
+        else:
+            stdsrc.addstr(y+1, x+2, "╺.╸")
+        stdsrc.attroff(curses.color_pair(self.color))
 
         if self.client:
             self.client.draw(stdsrc, y+3, x+3)
