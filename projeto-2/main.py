@@ -23,83 +23,110 @@ class LotteryApp():
         # Lista de clientes que já foram atendidos
         self.served_clients: list[Client] = []
 
-        # Variaveis para contr
+        # Variaveis para controle
         self.booths_space = len(self.booths) * 6 + (len(self.booths) - 1) * 4
-        self.info_space = 25
+        self.info_space = 26
+        self.hist_space = 42
 
-        self.stdsrc: curses.window
+        self.lottery_start = 10
+
         self.height: int
         self.width: int
 
+        self.stdsrc: curses.window
+
         self.start_time: float
 
-    def __write_str_center(self, y, str):
-        x = floor(self.width / 2) - ceil(len(str) / 2)
-
-        self.stdsrc.addstr(y, x, str)
-
     def draw_lottery(self):
-        loterica_str = '─'*(ceil((self.booths_space) / 2)+3) + \
-            ' LOTERICA '+'─'*(floor((self.booths_space) / 2)+3)
-        cofre_str = '─'*ceil((self.booths_space) / 2) + \
-            ' COFRE '+'─'*floor((self.booths_space) / 2)
-
         self.stdsrc.attron(curses.color_pair(GREEN))
-        self.__write_str_center(0, loterica_str)
+        self.stdsrc.addstr(
+            0, self.lottery_start,
+            '──────────────── LOTERICA ────────────────'
+        )
         self.stdsrc.attroff(curses.color_pair(GREEN))
 
-        self.__write_str_center(2, cofre_str)
-        self.__write_str_center(3, str(self.vault.amount))
-        self.__write_str_center(4, '─'*(len(cofre_str)))
+        self.stdsrc.addstr(2, self.lottery_start+11, '┌───── COFRE ─────┐')
+        self.stdsrc.addstr(3, self.lottery_start+11,
+                           f'│{self.vault.amount:>17}│')
+        self.stdsrc.addstr(4, self.lottery_start+11, '└─────────────────┘')
 
     def draw_hist(self):
-        self.stdsrc.addstr(0, 0, '{:<16}{:<10}{}'.format(
-            '   CATEGORIA', 'AÇÃO', ' TEMPO ESPERA'
-        ))
+        self.stdsrc.addstr(
+            0, self.width - self.hist_space + 2,
+            f'ID SMB CHEGADA ATENDIDO  FINAL  ESPERA  '
+        )
 
         y = 1
         total_time = 0
         for client in self.served_clients:
             total_time += client.wait_time
-            self.stdsrc.addstr(y, 0, str(client))
+
+            c_str = f'{client.id:>2}   ' +\
+                f'{client.arrive_time:>9.2f}  ' +\
+                f'{client.arrive_time + client.wait_time:>7.2f}  ' +\
+                f'{f"{client.end_time:>5.2f}" if client.end_time else f"{'':>5}"} ' +\
+                f'{client.wait_time:>7.2f}'
+
+            self.stdsrc.addstr(
+                y, self.width - self.hist_space + 2, c_str
+            )
+            client.draw(
+                self.stdsrc,
+                y, self.width - self.hist_space + 6
+            )
             y += 1
 
-        self.stdsrc.attron(curses.color_pair(BLUE))
+        self.stdsrc.attron(curses.color_pair(GREEN))
         for i in range(len(self.served_clients)+4):
-            self.stdsrc.addstr(i, 40, '║')
-        self.stdsrc.addstr(len(self.served_clients)+1, 0, '─'*40+'╢')
-        self.stdsrc.addstr(len(self.served_clients)+4, 0, '═'*40+'╝')
-        self.stdsrc.attroff(curses.color_pair(BLUE))
+            self.stdsrc.addstr(
+                i, self.width - self.hist_space + 41, '║'
+            )
+            self.stdsrc.addstr(
+                i, self.width - self.hist_space, '║'
+            )
+        self.stdsrc.addstr(
+            len(self.served_clients)+1,
+            self.width - self.hist_space,
+            '╟'+'─'*40+'╢'
+        )
+        self.stdsrc.addstr(
+            len(self.served_clients)+4,
+            self.width - self.hist_space,
+            '╚'+'═'*40+'╝'
+        )
+        self.stdsrc.attroff(curses.color_pair(GREEN))
 
         mean_wait_time = total_time / \
             len(self.served_clients) if len(self.served_clients) != 0 else 0
         self.stdsrc.addstr(
-            len(self.served_clients)+2, 0,
-            '{:>26}{}{:>6.2f}'.format('', 'TOTAL: ', total_time)
+            len(self.served_clients)+2,
+            self.width - self.hist_space + 20,
+            f'ESPERA TOTAL: {total_time:>6.2f}'
         )
         self.stdsrc.addstr(
-            len(self.served_clients)+3, 0,
-            '{:>26}{}{:>6.2f}'.format('', 'MEDIA: ', mean_wait_time)
+            len(self.served_clients)+3,
+            self.width - self.hist_space + 20,
+            f'ESPERA MEDIA: {mean_wait_time:>6.2f}'
         )
 
     def draw_infos(self):
         self.stdsrc.addstr(
-            0, self.width - self.info_space,
+            0, self.width - self.info_space - self.hist_space + 1,
             "        INFOS       "
         )
 
         actions = [
-            "  S - SAQUE         (3s)",
-            "  D - DEPOSITO      (4s)",
-            "  A - APOSENTADORIA (5s)",
-            "  C - CONTA         (6s)",
-            "  V - 2° VIA        (7s)",
-            "  M - MEGA-SENA     (8s)",
+            "S - SAQUE         (3s)",
+            "D - DEPOSITO      (4s)",
+            "A - APOSENTADORIA (5s)",
+            "C - CONTA         (6s)",
+            "V - 2° VIA        (7s)",
+            "M - MEGA-SENA     (8s)",
         ]
-        for i in range(len(actions)):
+        for i, action in enumerate(actions):
             self.stdsrc.addstr(
-                i+2, self.width - self.info_space,
-                actions[i]
+                i+2, self.width - self.info_space - self.hist_space + 2,
+                action
             )
 
         categories = [
@@ -108,51 +135,55 @@ class LotteryApp():
             (BLUE,      "GRAVIDA       (3)"),
             (GREEN,     "ADULTO        (4)")
         ]
-        for i in range(len(categories)):
-            color, cat = categories[i]
+        for i, category in enumerate(categories):
+            color, cat = category
 
             self.stdsrc.attron(curses.color_pair(color))
             self.stdsrc.addch(
                 i+3+len(actions),
-                self.width - self.info_space + 2,
+                self.width - self.info_space - self.hist_space + 2,
                 " ", curses.A_REVERSE
             )
             self.stdsrc.attroff(curses.color_pair(color))
 
             self.stdsrc.addstr(
                 i+3+len(actions),
-                self.width - self.info_space + 3,
+                self.width - self.info_space - self.hist_space + 3,
                 " - " + cat
             )
 
         self.stdsrc.attron(curses.color_pair(BLUE))
         for i in range(len(actions) + len(categories) + 3):
             self.stdsrc.addstr(
-                i, self.width - self.info_space,
+                i, self.width - self.hist_space - 1,
+                "║"
+            )
+            self.stdsrc.addstr(
+                i, self.width - self.info_space - self.hist_space,
                 "║"
             )
         self.stdsrc.addstr(
             len(actions) + len(categories) + 3,
-            self.width - self.info_space,
-            "╚════════════════════════"
+            self.width - self.info_space - self.hist_space,
+            "╚════════════════════════╝"
         )
         self.stdsrc.attroff(curses.color_pair(BLUE))
 
     def draw_lottery_booths(self, is_running: bool = True):
         y = 8
-        x = floor(self.width / 2) - ceil(self.booths_space / 2)
+        x = self.lottery_start + 3
 
         for booth in self.booths:
             booth.draw(self.stdsrc, y, x, is_running)
             x += 9
 
     def draw_queue(self):
-        x = floor(self.width / 2) - ceil(self.booths_space / 2)
+        x = self.lottery_start + 3
 
         queue = self.client_queue.get_clients()
         for client in queue:
             client.draw(self.stdsrc, 16, x)
-            x += 3
+            x += 4
 
     def __reset_cursor(self):
         self.stdsrc.addch(self.height - 1, self.width - 2, ' ')
@@ -170,7 +201,11 @@ class LotteryApp():
                     wait_time = time.time() - self.start_time - client.arrive_time
                     client.wait_time = wait_time
                     self.served_clients.append(client)
-                    threading.Thread(target=booth.serve, args=[client]).start()
+                    call_time = time.time() - self.start_time
+                    threading.Thread(
+                        target=booth.serve,
+                        args=[client, call_time]
+                    ).start()
                 else:
                     booth.semaphore.release()
 
@@ -272,19 +307,20 @@ if __name__ == '__main__':
         Client(1, "PCD", 100, "CONTA", 1),
         Client(2, "ADULTO", 200, "DEPOSITO", 1),
         Client(3, "IDOSO", 50, "SAQUE", 1),
-        Client(4, "GRAVIDA", 600, "2° VIA", 1),
-        Client(5, "PCD", 10, "MEGA-SENA", 1),
-        Client(6, "ADULTO", 20, "MEGA-SENA", 2),
-        Client(7, "PCD", 40, "APOSENTADORIA", 2),
-        Client(8, "GRAVIDA", 50, "DEPOSITO", 2),
-        Client(9, "IDOSO", 30, "APOSENTADORIA", 3),
-        Client(10, "IDOSO", 60, "DEPOSITO", 3),
-        Client(11, "IDOSO", 70, "SAQUE", 3),
-        Client(12, "ADULTO", 80, "MEGA-SENA", 4),
-        Client(13, "GRAVIDA", 100, "SAQUE", 4),
-        Client(14, "ADULTO", 20, "SAQUE", 5),
-        Client(15, "GRAVIDA", 20, "2° VIA", 5),
-        Client(16, "ADULTO", 20, "2° VIA", 20)
+        Client(4, "IDOSO", 50, "MEGA-SENA", 1),
+        Client(5, "GRAVIDA", 600, "2° VIA", 1),
+        Client(6, "PCD", 10, "MEGA-SENA", 1),
+        Client(7, "ADULTO", 20, "MEGA-SENA", 2),
+        Client(8, "PCD", 40, "APOSENTADORIA", 2),
+        Client(9, "GRAVIDA", 50, "DEPOSITO", 2),
+        Client(10, "IDOSO", 30, "APOSENTADORIA", 3),
+        Client(11, "IDOSO", 60, "DEPOSITO", 3),
+        Client(12, "IDOSO", 70, "SAQUE", 3),
+        Client(13, "ADULTO", 80, "MEGA-SENA", 4),
+        Client(14, "GRAVIDA", 100, "SAQUE", 4),
+        Client(15, "ADULTO", 20, "SAQUE", 5),
+        Client(16, "GRAVIDA", 20, "2° VIA", 5),
+        Client(17, "ADULTO", 20, "2° VIA", 20)
     ]
 
     vault = LotteryVault(1000, with_lock=args.monitor)

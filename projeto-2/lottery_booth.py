@@ -33,19 +33,25 @@ class LotteryBooth:
         if self.client:
             self.client.draw(stdsrc, y+3, x+3)
 
-    def serve(self, client: Client):
+    def serve(self, client: Client, call_time: float):
         self.client = client
         print(
-            f"ENTRADA - CABINE {self.id} - {client.category} - {client.amount} reais"
+            f"{call_time:.2f} ENTRADA - CABINE {self.id} - {client.category} - {client.id}"
         )
+
         if client.action == 'SAQUE':
             self.__transaction_array.append(-client.amount)
         else:
             self.__transaction_array.append(client.amount)
+        s = time.time()
         time.sleep(client.action_time)
+        e = time.time()
+
+        realese_time = call_time + e - s
         print(
-            f"SAÍDA - CABINE {self.id} - {client.category} - {client.amount} reais"
+            f"{realese_time:.2f} SAÍDA - CABINE {self.id} - {client.category} - {client.id}"
         )
+        self.client.end_time = realese_time
         self.client = None
         self.semaphore.release()
 

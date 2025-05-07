@@ -14,9 +14,11 @@ class Client:
         self.action_time = self.__get_time_action(action)
         self.arrive_time = arrive_time
         self.wait_time: float
+        self.end_time: float | None = None
 
     def __str__(self):
-        return '{:<3}({}){:<10}({}){:<15}{:>5.2f}'.format(self.id, self.priority, self.category, self.action_time, self.action, self.wait_time)
+        # return '{:<3}({}){:<10}({}){:<15}{:>5.2f}'.format(self.id, self.priority, self.category, self.action_time, self.action, self.wait_time)
+        return '{:>2} {}-{}   {}-{}   {:>5.2f}s'.format(self.id, self.priority, self.category[0], self.action_time, self.action[0], self.wait_time)
 
     def __get_priority(self, category):
         priority = {
@@ -62,3 +64,4 @@ class Client:
         stdsrc.attron(curses.color_pair(self.color))
         stdsrc.addch(y, x, self.char, curses.A_REVERSE)
         stdsrc.attroff(curses.color_pair(self.color))
+        stdsrc.addstr(y+1, x-1, f'{self.id:>2}')
