@@ -155,7 +155,7 @@ class LotteryApp():
             if booth.semaphore.acquire(blocking=False):
                 client = self.client_queue.get_next()
                 if client:
-                    wait_time = time.time() - self.start_time + client.arrive_time
+                    wait_time = time.time() - self.start_time - client.arrive_time
                     client.wait_time = wait_time
                     self.served_clients.append(client)
                     threading.Thread(target=booth.serve, args=[client]).start()
@@ -257,11 +257,16 @@ if __name__ == '__main__':
         Client("GRAVIDA", 600, "2° VIA", 1),
         Client("PCD", 10, "MEGA-SENA", 1),
         Client("ADULTO", 20, "MEGA-SENA", 2),
-        Client("IDOSO", 30, "MEGA-SENA", 3),
-        # Client("PCD", 40, "MEGA-SENA", 2),
-        # Client("GRAVIDA", 50, "MEGA-SENA", 2),
-        # Client("IDOSO", 60, "MEGA-SENA", 4),
-        # Client("IDOSO", 70, "MEGA-SENA", 5)
+        Client("PCD", 40, "APOSENTADORIA", 2),
+        Client("GRAVIDA", 50, "DEPOSITO", 2),
+        Client("IDOSO", 30, "APOSENTADORIA", 3),
+        Client("IDOSO", 60, "DEPOSITO", 3),
+        Client("IDOSO", 70, "SAQUE", 3),
+        Client("ADULTO", 80, "MEGA-SENA", 4),
+        Client("GRAVIDA", 100, "SAQUE", 4),
+        Client("ADULTO", 20, "SAQUE", 5),
+        Client("GRAVIDA", 20, "2° VIA", 5),
+        Client("ADULTO", 20, "2° VIA", 20)
     ]
 
     vault = LotteryVault(1000, with_lock=args.monitor)
